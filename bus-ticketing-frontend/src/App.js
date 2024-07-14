@@ -25,8 +25,10 @@ const App = () => {
       }
 
       const userData = await response.json();
-      setLoggedInUser({ username: userData.username, role: 'admin' });
-    } catch (error) {
+      
+    setLoggedInUser({ username: userData.username, role: 'admin' });
+    return userData.token;
+  } catch (error) {
       console.error('Admin login failed:', error.message);
       throw error;
       // Handle login failure (e.g., show error message to user)
@@ -42,20 +44,23 @@ const App = () => {
         },
         body: JSON.stringify({ username, password }),
       });
-
+  
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error); // Throw the specific error message from the backend
       }
-
+  
       const userData = await response.json();
       setLoggedInUser({ username: userData.username, role: 'traveler' });
+  
+      return userData.token; // Return the token from the backend response
     } catch (error) {
       console.error('Traveler login failed:', error.message);
       throw error;
       // Handle login failure (e.g., show error message to user)
     }
   };
+  
 
   const handleLogout = () => {
     setLoggedInUser(null); // Clear logged-in user state

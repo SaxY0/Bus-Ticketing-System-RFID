@@ -10,7 +10,11 @@ const TravelerDashboard = ({ travelerName }) => {
   // Fetch bus timings function
   const fetchBusTimings = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/bus/timings');
+      const response = await fetch('http://localhost:3001/api/traveler/bus-timings', {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      });
       if (!response.ok) {
         throw new Error('Failed to fetch bus timings');
       }
@@ -25,30 +29,44 @@ const TravelerDashboard = ({ travelerName }) => {
   // Fetch wallet balance function
   const fetchWalletBalance = async () => {
     try {
-      const response = await fetch(`http://localhost:3001/api/traveler/${localStorage.getItem('userId')}/wallet/balance`, {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token available');
+      }
+  
+      const response = await fetch(`http://localhost:3001/api/traveler/wallet`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
+          Authorization: `Bearer ${token}`
         }
       });
+  
       if (!response.ok) {
-        throw new Error('Failed to fetch wallet balance');
+        const errorData = await response.json();
+        throw new Error(`Failed to fetch wallet balance: ${errorData.error}`);
       }
+  
       const data = await response.json();
-      setWalletBalance(data.balance);
+      setWalletBalance(data.balance); // Assuming setWalletBalance is a state updater function
+  
     } catch (error) {
       console.error('Error fetching wallet balance:', error.message);
       // Handle error (e.g., show error message to user)
     }
   };
+  
 
   // Function to top up wallet balance
   const handleTopUpBalance = async () => {
     try {
-      const response = await fetch(`http://localhost:3001/api/traveler/${localStorage.getItem('userId')}/wallet/topup`, {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token available');
+      }
+      const response = await fetch(`http://localhost:3001/api/traveler/wallet/top-up`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`
+          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({ amount: topUpAmount })
       });
@@ -69,6 +87,11 @@ const TravelerDashboard = ({ travelerName }) => {
     fetchBusTimings();
     fetchWalletBalance();
   }, []);
+
+  // Function to handle logout
+  const handleLogout = () => {
+    localStorage.clear();
+  };
 
   return (
     <div>
@@ -101,7 +124,7 @@ const TravelerDashboard = ({ travelerName }) => {
         {topUpMessage && <p>{topUpMessage}</p>}
       </div>
       <div>
-        <Link to="/" onClick={() => localStorage.clear()}>
+        <Link to="/" onClick={handleLogout}>
           Logout
         </Link>
       </div>

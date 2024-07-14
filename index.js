@@ -1,7 +1,9 @@
 const express = require('express');
 const mysql = require('mysql2');
 const dotenv = require('dotenv');
-const cors = require('cors'); // Import cors package
+const cors = require('cors');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const adminRoutes = require('./routes/adminRoutes');
 const travelerRoutes = require('./routes/travelerRoutes');
 
@@ -33,13 +35,15 @@ app.use(express.json());
 
 // CORS setup
 app.use(cors({
-  origin: 'http://localhost:3000', // Allow requests from this origin
-  credentials: true  // If you need to send cookies cross-origin
+  origin: 'http://localhost:3000', // Update with your frontend origin
+  credentials: true
 }));
+
+
 
 // Routes
 app.use('/api/admin', adminRoutes);
-app.use('/api/traveler', travelerRoutes);
+app.use('/api/traveler', travelerRoutes); // Apply middleware to traveler routes
 
 // Handle 404 errors
 app.use((req, res, next) => {

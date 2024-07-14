@@ -26,7 +26,11 @@ const AdminDashboard = ({ adminName }) => {
   // Function to fetch travelers from backend
   const fetchTravelers = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/admin/travelers');
+      const response = await fetch('http://localhost:3001/api/admin/travelers', {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      });
       if (!response.ok) {
         throw new Error('Failed to fetch travelers');
       }
@@ -45,6 +49,7 @@ const AdminDashboard = ({ adminName }) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify({ username: registerUsername, password: registerPassword, name: registerName, email: registerEmail }),
       });
@@ -68,6 +73,7 @@ const AdminDashboard = ({ adminName }) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify({ cardNumber, assignedDate }),
       });
@@ -89,6 +95,9 @@ const AdminDashboard = ({ adminName }) => {
     try {
       const response = await fetch(`http://localhost:3001/api/admin/${selectedTraveler}/delete`, {
         method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        },
       });
       if (!response.ok) {
         throw new Error('Failed to delete traveler');

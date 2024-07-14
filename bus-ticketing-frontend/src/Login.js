@@ -11,7 +11,10 @@ const Login = ({ handleLogin }) => {
     e.preventDefault();
 
     try {
-      await handleLogin(username, password); // Pass username and password to handleLogin function
+      const token = await handleLogin(username, password); // Call handleLogin with username and password
+
+      // Store the token in localStorage
+      localStorage.setItem('token', token);
 
       // Navigate to traveler dashboard after successful login
       navigate('/traveler-dashboard');

@@ -11,7 +11,8 @@ const AdminLogin = ({ handleAdminLogin }) => {
     e.preventDefault();
 
     try {
-      await handleAdminLogin(username, password);
+      const token=await handleAdminLogin(username, password);
+      localStorage.setItem('token', token);
       // Redirect to admin dashboard on successful login
       navigate('/admin-dashboard');
     } catch (error) {
