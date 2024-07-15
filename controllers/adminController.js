@@ -107,10 +107,10 @@ exports.deleteTraveler = (req, res) => {
         return res.status(500).json({ error: 'Database error' });
       }
 
-      // Delete associated RFID cards
-      connection.query('DELETE FROM RFID_Cards WHERE user_id = ?', [userId], (err, results) => {
+      // First, get all RFID card IDs associated with the user
+      connection.query('SELECT rfid_id FROM RFID_Cards WHERE user_id = ?', [userId], (err, results) => {
         if (err) {
-          console.error('Error deleting RFID cards:', err);
+          console.error('Error fetching RFID card IDs:', err);
           connection.rollback(() => {
             connection.release();
             return res.status(500).json({ error: 'Database error' });
@@ -118,21 +118,12 @@ exports.deleteTraveler = (req, res) => {
           return;
         }
 
-        // Delete associated wallet records
-        connection.query('DELETE FROM wallet WHERE user_id = ?', [userId], (err, results) => {
-          if (err) {
-            console.error('Error deleting wallet records:', err);
-            connection.rollback(() => {
-              connection.release();
-              return res.status(500).json({ error: 'Database error' });
-            });
-            return;
-          }
-
-          // Now delete the traveler from Users table
-          connection.query('DELETE FROM Users WHERE user_id = ?', [userId], (err, results) => {
+        const rfidIds = results.map(row => row.rfid_id);
+        if (rfidIds.length > 0) {
+          // Delete associated trips
+          connection.query('DELETE FROM Trips WHERE rfid_id IN (?)', [rfidIds], (err, results) => {
             if (err) {
-              console.error('Error deleting traveler:', err);
+              console.error('Error deleting trips:', err);
               connection.rollback(() => {
                 connection.release();
                 return res.status(500).json({ error: 'Database error' });
@@ -140,10 +131,10 @@ exports.deleteTraveler = (req, res) => {
               return;
             }
 
-            // Commit the transaction
-            connection.commit((err) => {
+            // Delete associated RFID cards
+            connection.query('DELETE FROM RFID_Cards WHERE user_id = ?', [userId], (err, results) => {
               if (err) {
-                console.error('Error committing transaction:', err);
+                console.error('Error deleting RFID cards:', err);
                 connection.rollback(() => {
                   connection.release();
                   return res.status(500).json({ error: 'Database error' });
@@ -151,15 +142,90 @@ exports.deleteTraveler = (req, res) => {
                 return;
               }
 
-              connection.release();
-              res.status(200).json({ message: 'Traveler deleted successfully' });
+              // Delete associated wallet records
+              connection.query('DELETE FROM wallet WHERE user_id = ?', [userId], (err, results) => {
+                if (err) {
+                  console.error('Error deleting wallet records:', err);
+                  connection.rollback(() => {
+                    connection.release();
+                    return res.status(500).json({ error: 'Database error' });
+                  });
+                  return;
+                }
+
+                // Now delete the traveler from Users table
+                connection.query('DELETE FROM Users WHERE user_id = ?', [userId], (err, results) => {
+                  if (err) {
+                    console.error('Error deleting traveler:', err);
+                    connection.rollback(() => {
+                      connection.release();
+                      return res.status(500).json({ error: 'Database error' });
+                    });
+                    return;
+                  }
+
+                  // Commit the transaction
+                  connection.commit((err) => {
+                    if (err) {
+                      console.error('Error committing transaction:', err);
+                      connection.rollback(() => {
+                        connection.release();
+                        return res.status(500).json({ error: 'Database error' });
+                      });
+                      return;
+                    }
+
+                    connection.release();
+                    res.status(200).json({ message: 'Traveler deleted successfully' });
+                  });
+                });
+              });
             });
           });
-        });
+        } else {
+          // If no RFID cards found, proceed to delete the traveler and wallet records
+          connection.query('DELETE FROM wallet WHERE user_id = ?', [userId], (err, results) => {
+            if (err) {
+              console.error('Error deleting wallet records:', err);
+              connection.rollback(() => {
+                connection.release();
+                return res.status(500).json({ error: 'Database error' });
+              });
+              return;
+            }
+
+            connection.query('DELETE FROM Users WHERE user_id = ?', [userId], (err, results) => {
+              if (err) {
+                console.error('Error deleting traveler:', err);
+                connection.rollback(() => {
+                  connection.release();
+                  return res.status(500).json({ error: 'Database error' });
+                });
+                return;
+              }
+
+              // Commit the transaction
+              connection.commit((err) => {
+                if (err) {
+                  console.error('Error committing transaction:', err);
+                  connection.rollback(() => {
+                    connection.release();
+                    return res.status(500).json({ error: 'Database error' });
+                  });
+                  return;
+                }
+
+                connection.release();
+                res.status(200).json({ message: 'Traveler deleted successfully' });
+              });
+            });
+          });
+        }
       });
     });
   });
 };
+
 
 // Controller method to get all travelers
 exports.getAllTravelers = (req, res) => {

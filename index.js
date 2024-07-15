@@ -47,8 +47,8 @@ try {
   const port = new SerialPort({ path: 'COM3', baudRate: 9600 });
   const parser = port.pipe(new ReadlineParser({ delimiter: '\r\n' }));
 
-  // Variables to manage trip state
-  let currentTrip = null; // To store current trip details
+  // Variables to manage trip states for multiple travelers
+  const currentTrips = {}; // Object to store ongoing trip details keyed by RFID card number
 
   // Handle incoming RFID data
   parser.on('data', async (rfidData) => {
@@ -65,12 +65,22 @@ try {
         return;
       }
 
-      if (!currentTrip) {
+      // Fetch wallet balance
+      const balanceQuery = `SELECT balance FROM Wallet WHERE user_id = (SELECT user_id FROM RFID_Cards WHERE rfid_id = ?)`;
+      const [balanceRows] = await pool.promise().query(balanceQuery, [rfidCard.rfid_id]);
+      const wallet = balanceRows[0];
+
+      if (wallet.balance <= 80) {
+        console.log('Insufficient balance for RFID:', cardNumber);
+        return;
+      }
+
+      if (!currentTrips[cardNumber]) {
         // First tap (boarding)
         console.log('Boarding detected:', rfidCard);
 
         // Record boarding details
-        currentTrip = {
+        currentTrips[cardNumber] = {
           rfidId: rfidCard.rfid_id,
           cardNumber: rfidCard.card_number,
           boardingStopId: 1, // Replace with actual stop ID
@@ -81,27 +91,29 @@ try {
         // Second tap (deboarding)
         console.log('Deboarding detected:', rfidCard);
 
+        const trip = currentTrips[cardNumber];
+
         const deboardingStopId = 2; // Replace with actual stop ID
-        const fare = await calculateFare(currentTrip.boardingStopId, deboardingStopId);
+        const fare = await calculateFare(trip.boardingStopId, deboardingStopId);
 
         if (fare !== null) {
           // Update wallet balance (deduct fare)
           const updateWalletQuery = `UPDATE Wallet SET balance = balance - ? WHERE user_id = (SELECT user_id FROM RFID_Cards WHERE rfid_id = ?)`;
-          await pool.promise().query(updateWalletQuery, [fare, currentTrip.rfidId]);
+          await pool.promise().query(updateWalletQuery, [fare, trip.rfidId]);
 
           // Record trip details in database
           const tripInsertQuery = `INSERT INTO Trips (rfid_id, boarding_stop_id, deboarding_stop_id, boarding_time, deboarding_time, fare_amount)
                                    VALUES (?, ?, ?, ?, ?, ?)`;
           const deboardingTime = moment().format('YYYY-MM-DD HH:mm:ss');
-          await pool.promise().query(tripInsertQuery, [currentTrip.rfidId, currentTrip.boardingStopId, deboardingStopId, currentTrip.boardingTime, deboardingTime, fare]);
+          await pool.promise().query(tripInsertQuery, [trip.rfidId, trip.boardingStopId, deboardingStopId, trip.boardingTime, deboardingTime, fare]);
 
           console.log('Trip recorded successfully');
         } else {
           console.log('Fare not found for the given stops');
         }
 
-        // Reset trip state
-        currentTrip = null;
+        // Remove the completed trip from the currentTrips object
+        delete currentTrips[cardNumber];
       }
 
     } catch (error) {
