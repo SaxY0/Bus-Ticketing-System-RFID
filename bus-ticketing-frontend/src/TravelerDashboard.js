@@ -8,11 +8,20 @@ const TravelerDashboard = ({ travelerName }) => {
   const [topUpAmount, setTopUpAmount] = useState('');
   const [topUpMessage, setTopUpMessage] = useState('');
   const [showPastTrips, setShowPastTrips] = useState(false); // State for showing past trips
+  const [stops, setStops] = useState([]);
+  const [fromStop, setFromStop] = useState('');
+  const [toStop, setToStop] = useState('');
 
   // Fetch bus timings function
   const fetchBusTimings = async () => {
+    if (!fromStop || !toStop) {
+      // Skip fetching if either stop is not selected
+      setBusTimings([]);
+      return;
+    }
+
     try {
-      const response = await fetch('http://localhost:3001/api/traveler/bus-timings', {
+      const response = await fetch(`http://localhost:3001/api/traveler/bus-timings/${fromStop}/${toStop}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`
         }
@@ -21,10 +30,24 @@ const TravelerDashboard = ({ travelerName }) => {
         throw new Error('Failed to fetch bus timings');
       }
       const data = await response.json();
-      setBusTimings(data);
+      setBusTimings(data.busTimings);
     } catch (error) {
       console.error('Error fetching bus timings:', error.message);
-      // Handle error (e.g., show error message to user)
+      setBusTimings([]);
+    }
+  };
+
+  // Fetch stops function
+  const fetchStops = async () => {
+    try {
+      const response = await fetch('http://localhost:3001/api/stops');
+      if (!response.ok) {
+        throw new Error('Failed to fetch stops');
+      }
+      const data = await response.json();
+      setStops(data.stops);
+    } catch (error) {
+      console.error('Error fetching stops:', error.message);
     }
   };
 
@@ -52,7 +75,6 @@ const TravelerDashboard = ({ travelerName }) => {
   
     } catch (error) {
       console.error('Error fetching wallet balance:', error.message);
-      // Handle error (e.g., show error message to user)
     }
   };
 
@@ -80,14 +102,27 @@ const TravelerDashboard = ({ travelerName }) => {
       fetchWalletBalance();
     } catch (error) {
       console.error('Error topping up wallet balance:', error.message);
-      // Handle error (e.g., show error message to user)
     }
   };
 
+  // Handle from stop change
+  const handleFromStopChange = (e) => {
+    setFromStop(e.target.value);
+  };
+
+  // Handle to stop change
+  const handleToStopChange = (e) => {
+    setToStop(e.target.value);
+  };
+
   useEffect(() => {
-    fetchBusTimings();
+    fetchStops();
     fetchWalletBalance();
   }, []);
+
+  useEffect(() => {
+    fetchBusTimings();
+  }, [fromStop, toStop]);
 
   // Function to handle logout
   const handleLogout = () => {
@@ -104,10 +139,35 @@ const TravelerDashboard = ({ travelerName }) => {
       <h2>Welcome, {travelerName}!</h2>
       <div>
         <h3>Bus Timings</h3>
+        <div>
+          <label>Select From Stop:</label>
+          <select value={fromStop} onChange={handleFromStopChange}>
+            <option value="">Select From Stop</option>
+            {stops.map(stop => (
+              <option key={stop.stop_id} value={stop.stop_id}>{stop.stop_name}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label>Select To Stop:</label>
+          <select value={toStop} onChange={handleToStopChange}>
+            <option value="">Select To Stop</option>
+            {stops
+              .filter(stop => stop.stop_id !== fromStop) // Hide selected boarding point from destination options
+              .map(stop => (
+                <option key={stop.stop_id} value={stop.stop_id}>{stop.stop_name}</option>
+              ))}
+          </select>
+        </div>
         {busTimings.length > 0 ? (
           <ul>
             {busTimings.map((timing) => (
-              <li key={timing.id}>{timing.time}</li>
+              <li key={timing.id}>
+                Bus Number: {timing.bus_number}<br />
+                Arrival Time: {timing.arrival_time}<br />
+                Departure Time: {timing.departure_time}<br />
+                Reach Time: {timing.reach_time}
+              </li>
             ))}
           </ul>
         ) : (

@@ -107,7 +107,22 @@ exports.getPastTrips = (req, res) => {
   });
 };
 
+exports.getBusTimings = (req, res) => {
+  const { fromStopId, toStopId } = req.params;
 
+  pool.query(
+    'SELECT * FROM bus_timings WHERE from_stop = ? AND to_stop = ?',
+    [fromStopId, toStopId],
+    (err, results) => {
+      if (err) {
+        console.error('Error fetching bus timings:', err);
+        return res.status(500).json({ error: 'Database error' });
+      }
+
+      res.status(200).json({ busTimings: results });
+    }
+  );
+};
 
 
 
@@ -165,15 +180,4 @@ exports.login = (req, res) => {
     });
 };
 
-// Get bus timings
-exports.getBusTimings = (req, res) => {
-  pool.query('SELECT * FROM Bus_Timings',
-    (err, results) => {
-      if (err) {
-        console.error('Error fetching bus timings:', err.stack);
-        res.status(500).json({ error: 'Database error' });
-        return;
-      }
-      res.status(200).json(results);
-    });
-};
+

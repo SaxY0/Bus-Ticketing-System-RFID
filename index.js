@@ -5,6 +5,7 @@ const cors = require('cors');
 const moment = require('moment'); // Add moment for date formatting
 const adminRoutes = require('./routes/adminRoutes');
 const travelerRoutes = require('./routes/travelerRoutes');
+const stops = require('./routes/stops');
 const { SerialPort } = require('serialport');
 const { ReadlineParser } = require('@serialport/parser-readline');
 
@@ -128,7 +129,7 @@ try {
 // Routes
 app.use('/api/admin', adminRoutes);
 app.use('/api/traveler', travelerRoutes);
-
+app.use('/api/stops', stops);
 // Handle 404 errors
 app.use((req, res, next) => {
   res.status(404).json({ error: 'Not found' });

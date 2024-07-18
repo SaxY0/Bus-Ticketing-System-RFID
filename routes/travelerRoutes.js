@@ -12,6 +12,6 @@ router.get('/wallet', travelerController.getWalletBalance);
 router.post('/wallet/top-up', travelerController.addWalletAmount);
 router.get('/bus-timings', travelerController.getBusTimings);
 router.get('/past-trips', travelerController.getPastTrips); // New route for past trips
-
+router.get('/bus-timings/:fromStopId/:toStopId', travelerController.getBusTimings);
 module.exports = router;
 
