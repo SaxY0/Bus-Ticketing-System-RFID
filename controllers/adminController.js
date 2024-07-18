@@ -8,56 +8,67 @@ function isValidDate(dateString) {
   return regex.test(dateString);
 }
 
-// Controller method to get wallet balance for a traveler
-exports.getWalletBalance = (req, res) => {
-  const userId = req.params.userId;
+// Controller method to update traveler's wallet balance
+// Controller method to update traveler's wallet balance (simulate recharge)
+exports.rechargeTravelerBalance = (req, res) => {
+  const { userId } = req.params;
+  const { rechargeAmount } = req.body;
 
-  pool.query(
-    'SELECT balance FROM wallet WHERE user_id = ?',
-    [userId],
-    (err, results) => {
-      if (err) {
-        console.error('Error fetching wallet balance:', err);
-        return res.status(500).json({ error: 'Failed to fetch wallet balance' });
-      }
-
-      if (results.length === 0) {
-        return res.status(404).json({ error: 'Wallet balance not found for the user' });
-      }
-
-      const balance = results[0].balance;
-      res.status(200).json({ balance });
-    }
-  );
-};
-
-// Controller method to update wallet balance for a traveler
-exports.updateWalletBalance = (req, res) => {
-  const userId = req.params.userId;
-  const { newBalance } = req.body;
-
-  // Validate input
-  if (isNaN(parseFloat(newBalance))) {
-    return res.status(400).json({ error: 'Invalid balance value' });
+  if (isNaN(rechargeAmount) || parseFloat(rechargeAmount) <= 0) {
+    return res.status(400).json({ error: 'Invalid amount value' });
   }
+  const  amountToadd=parseFloat(rechargeAmount)
 
-  pool.query(
-    'UPDATE wallet SET balance = ? WHERE user_id = ?',
-    [newBalance, userId],
-    (err, results) => {
-      if (err) {
-        console.error('Error updating wallet balance:', err);
-        return res.status(500).json({ error: 'Failed to update wallet balance' });
-      }
-
-      if (results.affectedRows === 0) {
-        return res.status(404).json({ error: 'Wallet balance not found for the user' });
-      }
-
-      res.status(200).json({ message: 'Wallet balance updated successfully' });
+  pool.query('SELECT balance FROM wallet WHERE user_id = ?', [userId], (err, results) => {
+    if (err) {
+      console.error('Error fetching traveler balance:', err);
+      res.status(500).json({ error: 'Database error' });
+      return;
     }
-  );
+
+    if (results.length === 0) {
+      res.status(404).json({ error: 'Wallet not found for traveler' });
+      return;
+    }
+
+    const currentBalance = parseFloat(results[0].balance);
+    const newBalance = currentBalance + amountToadd;
+
+    pool.query('UPDATE wallet SET balance = ? WHERE user_id = ?', [newBalance, userId], (err, results) => {
+      if (err) {
+        console.error('Error updating traveler balance:', err);
+        res.status(500).json({ error: 'Database error' });
+        return;
+      }
+
+      res.status(200).json({ message: 'Traveler balance recharged successfully', newBalance });
+    });
+  });
 };
+
+
+
+// Controller method to get traveler's wallet balance
+exports.getTravelerBalance = (req, res) => {
+  const { userId } = req.params;
+
+  pool.query('SELECT balance FROM wallet WHERE user_id = ?', [userId], (err, results) => {
+    if (err) {
+      console.error('Error fetching traveler balance:', err);
+      res.status(500).json({ error: 'Database error' });
+      return;
+    }
+
+    if (results.length === 0) {
+      res.status(404).json({ error: 'Wallet not found for traveler' });
+      return;
+    }
+
+    const { balance } = results[0];
+    res.status(200).json({ balance });
+  });
+};
+
 
 // Controller method to assign an RFID card to a traveler
 exports.assignRFIDCard = (req, res) => {
@@ -239,70 +250,6 @@ exports.getAllTravelers = (req, res) => {
   });
 };
 
-// Controller method to get wallet balance for a specific traveler by admin
-exports.getTravelerWalletBalance = (req, res) => {
-  const { travelerId } = req.params;
-
-  pool.query(
-    'SELECT balance FROM wallet WHERE user_id = ?',
-    [travelerId],
-    (err, results) => {
-      if (err) {
-        console.error('Error fetching wallet balance:', err);
-        return res.status(500).json({ error: 'Failed to fetch wallet balance' });
-      }
-
-      if (results.length === 0) {
-        return res.status(404).json({ error: 'Wallet balance not found for the traveler' });
-      }
-
-      const balance = results[0].balance;
-      res.status(200).json({ balance });
-    }
-  );
-};
-
-// Controller method to update wallet balance for any traveler by admin
-exports.addTravelerWalletAmount = (req, res) => {
-  const { travelerId } = req.params;
-  const { amount } = req.body;
-
-  // Validate input
-  if (isNaN(amount) || parseFloat(amount) <= 0) {
-    return res.status(400).json({ error: 'Invalid amount value' });
-  }
-
-  const amountToAdd = parseFloat(amount);
-
-  // Get current balance
-  pool.query('SELECT balance FROM wallet WHERE user_id = ?', [travelerId], (err, results) => {
-    if (err) {
-      console.error('Error fetching current wallet balance:', err);
-      return res.status(500).json({ error: 'Failed to fetch current wallet balance' });
-    }
-
-    if (results.length === 0) {
-      return res.status(404).json({ error: 'Wallet not found for the traveler' });
-    }
-
-    const currentBalance = parseFloat(results[0].balance);
-    const newBalance = currentBalance + amountToAdd;
-
-    // Update wallet balance
-    pool.query('UPDATE wallet SET balance = ? WHERE user_id = ?', [newBalance, travelerId], (err, updateResults) => {
-      if (err) {
-        console.error('Error updating wallet balance:', err);
-        return res.status(500).json({ error: 'Failed to update wallet balance' });
-      }
-
-      if (updateResults.affectedRows === 0) {
-        return res.status(404).json({ error: 'Wallet not found for the traveler' });
-      }
-
-      res.status(200).json({ message: 'Wallet balance updated successfully', newBalance });
-    });
-  });
-};
 
 // Controller method to register a traveler
 exports.registerTraveler = (req, res) => {
