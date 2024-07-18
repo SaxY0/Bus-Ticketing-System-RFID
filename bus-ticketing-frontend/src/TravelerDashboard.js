@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import PastTrips from './PastTrips'; // Import the new component
 
 const TravelerDashboard = ({ travelerName }) => {
   const [busTimings, setBusTimings] = useState([]);
   const [walletBalance, setWalletBalance] = useState(null);
   const [topUpAmount, setTopUpAmount] = useState('');
   const [topUpMessage, setTopUpMessage] = useState('');
+  const [showPastTrips, setShowPastTrips] = useState(false); // State for showing past trips
 
   // Fetch bus timings function
   const fetchBusTimings = async () => {
@@ -53,7 +55,6 @@ const TravelerDashboard = ({ travelerName }) => {
       // Handle error (e.g., show error message to user)
     }
   };
-  
 
   // Function to top up wallet balance
   const handleTopUpBalance = async () => {
@@ -93,6 +94,11 @@ const TravelerDashboard = ({ travelerName }) => {
     localStorage.clear();
   };
 
+  // Function to toggle showing past trips
+  const toggleShowPastTrips = () => {
+    setShowPastTrips(!showPastTrips);
+  };
+
   return (
     <div>
       <h2>Welcome, {travelerName}!</h2>
@@ -127,6 +133,13 @@ const TravelerDashboard = ({ travelerName }) => {
         <Link to="/" onClick={handleLogout}>
           Logout
         </Link>
+      </div>
+      <div>
+        <h3>View Past Trips</h3>
+        <button onClick={toggleShowPastTrips}>
+          {showPastTrips ? 'Hide Past Trips' : 'Show Past Trips'}
+        </button>
+        {showPastTrips && <PastTrips />}
       </div>
     </div>
   );

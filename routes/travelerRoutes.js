@@ -1,3 +1,5 @@
+// routes.js
+
 const express = require('express');
 const router = express.Router();
 const travelerController = require('../controllers/travelerController');
@@ -9,5 +11,7 @@ router.use(authMiddleware); // Apply authMiddleware to all routes below this lin
 router.get('/wallet', travelerController.getWalletBalance);
 router.post('/wallet/top-up', travelerController.addWalletAmount);
 router.get('/bus-timings', travelerController.getBusTimings);
+router.get('/past-trips', travelerController.getPastTrips); // New route for past trips
 
 module.exports = router;
+

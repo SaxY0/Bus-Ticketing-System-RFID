@@ -65,6 +65,51 @@ exports.addWalletAmount = (req, res) => {
   });
 };
 
+// Controller method to fetch past trips for the logged-in traveler
+exports.getPastTrips = (req, res) => {
+  const travelerId = req.userId; // Assuming you have user ID in JWT payload
+
+  // First, get the traveler's RFID card number
+  pool.query('SELECT rfid_id FROM rfid_cards WHERE user_id = ?', [travelerId], (err, results) => {
+    if (err) {
+      console.error('Error fetching RFID card:', err);
+      return res.status(500).json({ error: 'Failed to fetch RFID card' });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'RFID card not found for the traveler' });
+    }
+
+    const rfidId = results[0].rfid_id;
+
+    // Fetch past trips for the RFID card with stop names
+    const query = `
+      SELECT t.trip_id, t.boarding_time, t.deboarding_time, t.fare_amount, 
+             bs.stop_name AS boarding_stop_name, ds.stop_name AS deboarding_stop_name
+      FROM trips t
+      JOIN stops bs ON t.boarding_stop_id = bs.stop_id
+      LEFT JOIN stops ds ON t.deboarding_stop_id = ds.stop_id
+      WHERE t.rfid_id = ?
+    `;
+
+    pool.query(query, [rfidId], (err, tripsResults) => {
+      if (err) {
+        console.error('Error fetching past trips:', err);
+        return res.status(500).json({ error: 'Failed to fetch past trips' });
+      }
+
+      if (tripsResults.length === 0) {
+        return res.status(404).json({ error: 'No past trips found for the traveler' });
+      }
+
+      res.status(200).json({ trips: tripsResults });
+    });
+  });
+};
+
+
+
+
 
 // Login function
 exports.login = (req, res) => {
