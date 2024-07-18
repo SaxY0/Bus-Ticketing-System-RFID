@@ -71,34 +71,35 @@ const App = () => {
   return (
     <Router>
       <div className="App">
-        <nav>
-          <ul>
-            <li>
-              <Link to="/">Home</Link>
+        <nav className="navbar">
+          <ul className="nav-list">
+            <li className="nav-item">
+              <Link to="/" className="nav-link">Home</Link>
             </li>
-            <li>
-              <Link to="/admin-login">Admin Login</Link>
+            <li className="nav-item">
+              <Link to="/admin-login" className="nav-link">Admin Login</Link>
             </li>
-            <li>
-              <Link to="/traveler-login">Traveler Login</Link>
+            <li className="nav-item">
+              <Link to="/traveler-login" className="nav-link">Traveler Login</Link>
             </li>
             {loggedInUser && (
-              <li>
-                <button onClick={handleLogout}>Logout</button>
+              <li className="nav-item">
+                <button onClick={handleLogout} className="logout-button">Logout</button>
               </li>
             )}
           </ul>
         </nav>
-
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/admin-login" element={<AdminLogin handleAdminLogin={handleAdminLogin} />} />
-          <Route path="/traveler-login" element={<Login handleLogin={handleTravelerLogin} />} />
-          <Route path="/admin-dashboard" element={<AdminDashboard adminName={loggedInUser?.username} />} />
-          <Route path="/traveler-dashboard" element={<TravelerDashboard travelerName={loggedInUser?.username} />} />
-          {/* Add a default route in case none of the above match */}
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
+  
+        <main className="main-content">
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/admin-login" element={<AdminLogin handleAdminLogin={handleAdminLogin} />} />
+            <Route path="/traveler-login" element={<Login handleLogin={handleTravelerLogin} />} />
+            <Route path="/admin-dashboard" element={<AdminDashboard adminName={loggedInUser?.username} />} />
+            <Route path="/traveler-dashboard" element={<TravelerDashboard travelerName={loggedInUser?.username} />} />
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </main>
       </div>
     </Router>
   );

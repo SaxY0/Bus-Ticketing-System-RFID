@@ -134,73 +134,98 @@ const TravelerDashboard = ({ travelerName }) => {
     setShowPastTrips(!showPastTrips);
   };
 
+  const [openSection, setOpenSection] = useState(null);
+
+  const toggleSection = (section) => {
+    setOpenSection(openSection === section ? null : section);
+  };
+
   return (
-    <div>
+    <div className="traveler-dashboard">
       <h2>Welcome, {travelerName}!</h2>
-      <div>
-        <h3>Bus Timings</h3>
-        <div>
-          <label>Select From Stop:</label>
-          <select value={fromStop} onChange={handleFromStopChange}>
-            <option value="">Select From Stop</option>
-            {stops.map(stop => (
-              <option key={stop.stop_id} value={stop.stop_id}>{stop.stop_name}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label>Select To Stop:</label>
-          <select value={toStop} onChange={handleToStopChange}>
-            <option value="">Select To Stop</option>
-            {stops
-              .filter(stop => stop.stop_id !== fromStop) // Hide selected boarding point from destination options
-              .map(stop => (
-                <option key={stop.stop_id} value={stop.stop_id}>{stop.stop_name}</option>
+      
+      <div className="dashboard-menu">
+        <button onClick={() => toggleSection('busTimings')}>Bus Timings</button>
+        <button onClick={() => toggleSection('wallet')}>Wallet</button>
+        <button onClick={() => toggleSection('pastTrips')}>Past Trips</button>
+      </div>
+
+      {openSection === 'busTimings' && (
+        <div className="dashboard-section">
+          <h3>Bus Timings</h3>
+          <div className="stop-selection">
+            <div>
+              <label>Select From Stop:</label>
+              <select value={fromStop} onChange={handleFromStopChange}>
+                <option value="">Select From Stop</option>
+                {stops.map(stop => (
+                  <option key={stop.stop_id} value={stop.stop_id}>{stop.stop_name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label>Select To Stop:</label>
+              <select value={toStop} onChange={handleToStopChange}>
+                <option value="">Select To Stop</option>
+                {stops
+                  .filter(stop => stop.stop_id !== fromStop)
+                  .map(stop => (
+                    <option key={stop.stop_id} value={stop.stop_id}>{stop.stop_name}</option>
+                  ))}
+              </select>
+            </div>
+          </div>
+          {busTimings.length > 0 ? (
+            <ul className="bus-timings-list">
+              {busTimings.map((timing) => (
+                <li key={timing.id}>
+                  <strong>Bus Number:</strong> {timing.bus_number}<br />
+                  <strong>Arrival Time:</strong> {timing.arrival_time}<br />
+                  <strong>Departure Time:</strong> {timing.departure_time}<br />
+                  <strong>Reach Time:</strong> {timing.reach_time}
+                </li>
               ))}
-          </select>
+            </ul>
+          ) : (
+            <p>No bus timings available</p>
+          )}
         </div>
-        {busTimings.length > 0 ? (
-          <ul>
-            {busTimings.map((timing) => (
-              <li key={timing.id}>
-                Bus Number: {timing.bus_number}<br />
-                Arrival Time: {timing.arrival_time}<br />
-                Departure Time: {timing.departure_time}<br />
-                Reach Time: {timing.reach_time}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p>No bus timings available</p>
-        )}
-      </div>
-      <div>
-        <h3>Wallet Balance</h3>
-        <p>{walletBalance !== null ? `$${walletBalance}` : 'Loading...'}</p>
-      </div>
-      <div>
-        <h3>Top Up Wallet</h3>
-        <input
-          type="number"
-          placeholder="Enter amount"
-          value={topUpAmount}
-          onChange={(e) => setTopUpAmount(e.target.value)}
-        />
-        <button onClick={handleTopUpBalance}>Top Up</button>
-        {topUpMessage && <p>{topUpMessage}</p>}
-      </div>
-      <div>
-        <Link to="/" onClick={handleLogout}>
-          Logout
-        </Link>
-      </div>
-      <div>
-        <h3>View Past Trips</h3>
-        <button onClick={toggleShowPastTrips}>
-          {showPastTrips ? 'Hide Past Trips' : 'Show Past Trips'}
-        </button>
-        {showPastTrips && <PastTrips />}
-      </div>
+      )}
+
+      {openSection === 'wallet' && (
+        <div className="dashboard-section">
+          <h3>Wallet</h3>
+          <div className="wallet-balance">
+            <h4>Current Balance</h4>
+            <p>{walletBalance !== null ? `$${walletBalance}` : 'Loading...'}</p>
+          </div>
+          <div className="top-up-wallet">
+            <h4>Top Up Wallet</h4>
+            <input
+              type="number"
+              placeholder="Enter amount"
+              value={topUpAmount}
+              onChange={(e) => setTopUpAmount(e.target.value)}
+            />
+            <button onClick={handleTopUpBalance}>Top Up</button>
+            {topUpMessage && <p className="message">{topUpMessage}</p>}
+          </div>
+        </div>
+      )}
+
+      {openSection === 'pastTrips' && (
+        <div className="dashboard-section">
+          <h3>Past Trips</h3>
+          <button onClick={toggleShowPastTrips}>
+            {showPastTrips ? 'Hide Past Trips' : 'Show Past Trips'}
+          </button>
+          {showPastTrips && <PastTrips />}
+        </div>
+      )}
+
+      <Link to="/" onClick={handleLogout} className="logout-link">
+        Logout
+      </Link>
     </div>
   );
 };

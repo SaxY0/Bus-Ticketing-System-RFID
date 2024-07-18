@@ -1,31 +1,30 @@
 import React from 'react';
-import { Link } from 'react-router-dom'; // If using React Router for navigation
+import { Link } from 'react-router-dom';
+import './LandingPage.css'; // Make sure to create this CSS file
 
 const LandingPage = () => {
   return (
     <div className="landing-page">
       <div className="content">
-        <h1>Welcome to Our Bus Ticketing System</h1>
+        <h1>Welcome to SmartRide Bus Ticketing System</h1>
         <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla convallis libero ut
-          condimentum lobortis. Cras pellentesque blandit tellus, id viverra ipsum euismod vitae.
-          Integer volutpat lacus ut turpis vestibulum, ac interdum ante scelerisque. Nullam
-          sollicitudin mi a ex pharetra, eget faucibus metus malesuada.
+          Experience hassle-free travel with our state-of-the-art RFID-based bus ticketing system. 
+          Say goodbye to paper tickets and long queues!
         </p>
         <p>
-          In hac habitasse platea dictumst. Fusce at bibendum mauris. Duis ac enim a mi vehicula
-          iaculis. Morbi et elit quis sapien tristique blandit.
+          Our innovative system allows you to simply tap your RFID card when boarding and alighting, 
+          automatically calculating your fare and deducting it from your account balance.
         </p>
         <p>
-          Phasellus id velit eu mauris faucibus vehicula. Suspendisse potenti. Sed ultricies purus
-          magna, id venenatis lacus luctus sed. Nulla facilisi.
+          Enjoy the convenience of easy top-ups, real-time balance checking, and detailed travel history. 
+          Join us in making public transportation smarter and more efficient!
         </p>
         <div className="button-container">
           <Link to="/traveler-login">
-            <button className="login-button">Login as Traveler</button>
+            <button className="login-button">Traveler Portal</button>
           </Link>
           <Link to="/admin-login">
-            <button className="login-button admin">Login as Admin</button>
+            <button className="login-button admin">Admin Dashboard</button>
           </Link>
         </div>
       </div>

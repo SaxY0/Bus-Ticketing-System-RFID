@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-
+import './login.css';
 const Login = ({ handleLogin }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -25,12 +25,11 @@ const Login = ({ handleLogin }) => {
   };
 
   return (
-    
-    <div>
+    <div className="login-container">
       <h2>Traveler Login</h2>
-      {error && <p style={{ color: 'red' }}>{error}</p>} {/* Display error message if present */}
-      <form onSubmit={handleSubmit}>
-        <div>
+      {error && <p className="error-message">{error}</p>}
+      <form onSubmit={handleSubmit} className="login-form">
+        <div className="form-group">
           <label htmlFor="username">Username:</label>
           <input
             type="text"
@@ -40,7 +39,7 @@ const Login = ({ handleLogin }) => {
             required
           />
         </div>
-        <div>
+        <div className="form-group">
           <label htmlFor="password">Password:</label>
           <input
             type="password"
@@ -50,10 +49,11 @@ const Login = ({ handleLogin }) => {
             required
           />
         </div>
-        <button type="submit">Login</button>
+        <button type="submit" className="submit-button">Login</button>
       </form>
     </div>
   );
+
 };
 
 export default Login;
