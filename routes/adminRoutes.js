@@ -12,5 +12,9 @@ router.post('/:userId/assign-card', adminController.assignRFIDCard);
 router.delete('/:userId/delete', adminController.deleteTraveler);
 router.put('/traveler/:userId/recharge', adminController.rechargeTravelerBalance);
 router.get('/traveler/:userId/balance', adminController.getTravelerBalance);
+// Controller methods for adding and removing buses
+router.post('/bus-timings/add', adminController.addBus);
+router.delete('/bus-timings/:busId/remove', adminController.removeBus);
+
 
 module.exports = router;

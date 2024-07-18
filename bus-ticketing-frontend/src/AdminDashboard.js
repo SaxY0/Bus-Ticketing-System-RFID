@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
 const AdminDashboard = ({ adminName }) => {
+  // Existing states
   const [registerUsername, setRegisterUsername] = useState('');
   const [registerPassword, setRegisterPassword] = useState('');
   const [registerName, setRegisterName] = useState('');
@@ -21,9 +22,23 @@ const AdminDashboard = ({ adminName }) => {
   const [travelers, setTravelers] = useState([]);
   const [selectedTravelerBalance, setSelectedTravelerBalance] = useState(null);
 
+  // New states for bus management
+  const [fromStop, setFromStop] = useState('');
+  const [toStop, setToStop] = useState('');
+  const [busNumber, setBusNumber] = useState('');
+  const [arrivalTime, setArrivalTime] = useState('');
+  const [departureTime, setDepartureTime] = useState('');
+  const [reachTime, setReachTime] = useState('');
+  const [busMessage, setBusMessage] = useState('');
+
+  const [busIdToRemove, setBusIdToRemove] = useState('');
+  const [removeBusMessage, setRemoveBusMessage] = useState('');
+
   useEffect(() => {
     fetchTravelers();
   }, []);
+
+  // Existing functions...
 
   // Fetch travelers from backend
   const fetchTravelers = async () => {
@@ -40,7 +55,6 @@ const AdminDashboard = ({ adminName }) => {
       setTravelers(data.travelers);
     } catch (error) {
       console.error('Error fetching travelers:', error.message);
-      // Handle error (e.g., show error message to user)
     }
   };
 
@@ -59,7 +73,6 @@ const AdminDashboard = ({ adminName }) => {
       setSelectedTravelerBalance(data.balance);
     } catch (error) {
       console.error('Error fetching traveler balance:', error.message);
-      // Handle error (e.g., show error message to user)
     }
   };
 
@@ -79,11 +92,9 @@ const AdminDashboard = ({ adminName }) => {
       }
       const data = await response.json();
       setRegisterMessage(data.message);
-      // Refresh travelers list after registration
       fetchTravelers();
     } catch (error) {
       console.error('Error registering traveler:', error.message);
-      // Handle error (e.g., show error message to user)
     }
   };
 
@@ -103,11 +114,9 @@ const AdminDashboard = ({ adminName }) => {
       }
       const data = await response.json();
       setAssignMessage(data.message);
-      // Refresh travelers list after assigning RFID card
       fetchTravelers();
     } catch (error) {
       console.error('Error assigning RFID card:', error.message);
-      // Handle error (e.g., show error message to user)
     }
   };
 
@@ -125,11 +134,9 @@ const AdminDashboard = ({ adminName }) => {
       }
       const data = await response.json();
       setDeleteMessage(data.message);
-      // Refresh travelers list after deleting traveler
       fetchTravelers();
     } catch (error) {
       console.error('Error deleting traveler:', error.message);
-      // Handle error (e.g., show error message to user)
     }
   };
 
@@ -149,21 +156,59 @@ const AdminDashboard = ({ adminName }) => {
       }
       const data = await response.json();
       setRechargeMessage(data.message);
-      // Fetch updated balance after recharge
       fetchTravelerBalance(selectedTraveler);
-      // Refresh travelers list after recharging balance
       fetchTravelers();
     } catch (error) {
       console.error('Error recharging balance:', error.message);
-      // Handle error (e.g., show error message to user)
     }
   };
 
   // Handle selection of traveler
   const handleTravelerSelect = async (travelerId) => {
     setSelectedTraveler(travelerId);
-    // Fetch current balance of selected traveler
     fetchTravelerBalance(travelerId);
+  };
+
+  // Add a new bus
+  const handleAddBus = async () => {
+    try {
+      const response = await fetch('http://localhost:3001/api/admin/bus-timings/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ fromStop, toStop, busNumber, arrivalTime, departureTime, reachTime }),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to add bus');
+      }
+      const data = await response.json();
+      setBusMessage(data.message);
+      // Optionally refresh bus list if you are maintaining it in the state
+    } catch (error) {
+      console.error('Error adding bus:', error.message);
+    }
+  };
+
+  // Remove a bus
+  const handleRemoveBus = async () => {
+    try {
+      const response = await fetch(`http://localhost:3001/api/admin/bus-timings/${busIdToRemove}/remove`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to remove bus');
+      }
+      const data = await response.json();
+      setRemoveBusMessage(data.message);
+      // Optionally refresh bus list if you are maintaining it in the state
+    } catch (error) {
+      console.error('Error removing bus:', error.message);
+    }
   };
 
   return (
@@ -265,6 +310,58 @@ const AdminDashboard = ({ adminName }) => {
         </select>
         <button onClick={handleDeleteTraveler}>Delete</button>
         {deleteMessage && <p>{deleteMessage}</p>}
+      </div>
+      <div>
+        <h3>Add New Bus</h3>
+        <input
+          type="text"
+          placeholder="From Stop"
+          value={fromStop}
+          onChange={(e) => setFromStop(e.target.value)}
+        />
+        <input
+          type="text"
+          placeholder="To Stop"
+          value={toStop}
+          onChange={(e) => setToStop(e.target.value)}
+        />
+        <input
+          type="text"
+          placeholder="Bus Number"
+          value={busNumber}
+          onChange={(e) => setBusNumber(e.target.value)}
+        />
+        <input
+          type="time"
+          placeholder="Arrival Time"
+          value={arrivalTime}
+          onChange={(e) => setArrivalTime(e.target.value)}
+        />
+        <input
+          type="time"
+          placeholder="Departure Time"
+          value={departureTime}
+          onChange={(e) => setDepartureTime(e.target.value)}
+        />
+        <input
+          type="time"
+          placeholder="Reach Time"
+          value={reachTime}
+          onChange={(e) => setReachTime(e.target.value)}
+        />
+        <button onClick={handleAddBus}>Add Bus</button>
+        {busMessage && <p>{busMessage}</p>}
+      </div>
+      <div>
+        <h3>Remove Bus</h3>
+        <input
+          type="text"
+          placeholder="Bus ID"
+          value={busIdToRemove}
+          onChange={(e) => setBusIdToRemove(e.target.value)}
+        />
+        <button onClick={handleRemoveBus}>Remove Bus</button>
+        {removeBusMessage && <p>{removeBusMessage}</p>}
       </div>
       <div>
         <Link to="/" onClick={() => localStorage.clear()}>
